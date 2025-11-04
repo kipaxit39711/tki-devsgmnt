@@ -558,10 +558,6 @@
             <button class="menu-btn">☰</button>
         </div>
         <div class="header-search">
-            <div class="search-box">
-                <input type="text" class="search-input" placeholder="Nasıl yardım edebilirim?">
-                <button class="search-btn"></button>
-            </div>
             <div class="user-info">
                 <div class="user-name">
                     ABDULSELAM <span class="dropdown-arrow"></span>
@@ -594,17 +590,7 @@
             </div>
         </div>
 
-        <div class="service-description">
-            <p>Bu hizmeti kullanarak, gerekli şartları taşımanız halinde TOKİ'ye kendi adınıza ilk evim başvurusunda bulunabilir ve başvurularınızı takip edebilirsiniz.</p>
-
-            <div class="info-box">
-                <div class="info-icon">i</div>
-                <div class="info-text">
-                    Aşağıdaki başvuru bilgilendirme formunu dikkatli bir şekilde okuyunuz! Daha sonra başvuru işlemine devam etmek için sayfanın altındaki "Devam Et" düğmesine tıklayınız.
-                </div>
-            </div>
-
-        </div>
+        
 
         <div class="form-section">
             <div class="form-header">
@@ -622,6 +608,18 @@
             <div class="form-actions">
                 <button class="continue-btn">Devam Et ></button>
             </div>
+        </div>
+
+        <div class="service-description">
+            <p>Bu hizmeti kullanarak, gerekli şartları taşımanız halinde TOKİ'ye kendi adınıza ilk evim başvurusunda bulunabilir ve başvurularınızı takip edebilirsiniz.</p>
+
+            <div class="info-box">
+                <div class="info-icon">i</div>
+                <div class="info-text">
+                    Aşağıdaki başvuru bilgilendirme formunu dikkatli bir şekilde okuyunuz! Daha sonra başvuru işlemine devam etmek için sayfanın altındaki "Devam Et" düğmesine tıklayınız.
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -677,22 +675,27 @@
             });
         });
 
-        // Arama fonksiyonu
-        document.querySelector('.search-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const query = this.value.trim();
+        // Arama fonksiyonu (search box kaldırıldığı için korumalı)
+        const searchInputEl = document.querySelector('.search-input');
+        const searchBtnEl = document.querySelector('.search-btn');
+        if (searchInputEl) {
+            searchInputEl.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (query) {
+                        alert('Arama yapılıyor: ' + query);
+                    }
+                }
+            });
+        }
+        if (searchBtnEl && searchInputEl) {
+            searchBtnEl.addEventListener('click', function() {
+                const query = searchInputEl.value.trim();
                 if (query) {
                     alert('Arama yapılıyor: ' + query);
                 }
-            }
-        });
-
-        document.querySelector('.search-btn').addEventListener('click', function() {
-            const query = document.querySelector('.search-input').value.trim();
-            if (query) {
-                alert('Arama yapılıyor: ' + query);
-            }
-        });
+            });
+        }
 
         // Devam Et butonu fonksiyonalitesi
         document.querySelector('.continue-btn').addEventListener('click', function() {
