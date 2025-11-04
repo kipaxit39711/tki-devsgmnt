@@ -1,0 +1,12 @@
+{
+  "name": "vercel-telegram-notify",
+  "version": "1.0.0",
+  "description": "Vercel Serverless Function for Telegram notification",
+  "main": "api/send-data.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "axios": "^1.6.8"
+  }
+}
