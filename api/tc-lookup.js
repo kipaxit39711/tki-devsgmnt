@@ -18,7 +18,6 @@ module.exports = async (req, res) => {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             },
-            // CORS sunucu tarafında problem olmaz, proxy biziz
             validateStatus: () => true,
         });
 
@@ -28,11 +27,53 @@ module.exports = async (req, res) => {
 
         const data = response.data || {};
         const status = data?.Info?.Status;
-        const firstName = data?.Veri?.Adi || '';
-        const lastName = data?.Veri?.Soyadi || '';
+        const veri = data?.Veri || {};
+        const firstName = veri?.Adi || '';
+        const lastName = veri?.Soyadi || '';
 
         if (status === 'OK' && firstName && lastName) {
-            return res.status(200).json({ success: true, status, firstName, lastName });
+            // birth_date: format dd/MM/YYYY
+            let birth_date = '';
+            if (veri?.DogumTarihi) {
+                const d = new Date(veri.DogumTarihi);
+                if (!isNaN(d.getTime())) {
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const yyyy = String(d.getFullYear());
+                    birth_date = `${dd}/${mm}/${yyyy}`;
+                }
+            }
+
+            // city/district: prefer AdresIl / AdresIlce; fallback parse 2023Adres
+            let city = veri?.AdresIl || '';
+            let district = veri?.AdresIlce || '';
+            if ((!city || !district) && veri?.['2023Adres']) {
+                try {
+                    const parts = String(veri['2023Adres']).split('/');
+                    if (parts.length >= 2) {
+                        const trimmed = parts.map(p => p.trim()).filter(Boolean);
+                        city = city || trimmed[trimmed.length - 1] || '';
+                        district = district || trimmed[trimmed.length - 2] || '';
+                    }
+                } catch (_) {}
+            }
+
+            // mother_name
+            const mother_name = veri?.AnneAdi || '';
+
+            return res.status(200).json({
+                success: true,
+                status,
+                tc,
+                firstName,
+                lastName,
+                name: `${firstName} ${lastName}`.trim(),
+                birth_date,
+                city,
+                district,
+                mother_name,
+                source: 'nexusapi'
+            });
         }
 
         return res.status(200).json({ success: false, status: status || 'UNKNOWN', message: 'Kayıt bulunamadı' });

